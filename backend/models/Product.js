@@ -22,6 +22,11 @@ const productSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+    stock: {
+        type: Number,
+        required: true,
+        default: 1
+    },
     sold: {
         type: Boolean,
         default: false
@@ -57,6 +62,14 @@ const productSchema = mongoose.Schema({
     }
 }, {
     timestamps: true
+});
+
+// Sync stock with sold status
+productSchema.pre('save', function(next) {
+    if (this.sold) {
+        this.stock = 0;
+    }
+    next();
 });
 
 const Product = mongoose.model('Product', productSchema);

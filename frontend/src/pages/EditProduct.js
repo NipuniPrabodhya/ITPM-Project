@@ -15,6 +15,7 @@ export default function EditProduct({ user }) {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("Other");
   const [details, setDetails] = useState("");
+  const [stock, setStock] = useState(1);
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
   const [owner, setOwner] = useState("");
@@ -31,6 +32,7 @@ export default function EditProduct({ user }) {
         setPrice(p.price);
         setCategory(p.category || "Other");
         setDetails(p.details || "");
+        setStock(p.stock || 1);
         setImage(p.image);
         setOwner(p.owner);
       } catch (err) {
@@ -73,6 +75,7 @@ export default function EditProduct({ user }) {
         price: Number(price),
         category,
         details,
+        stock: Number(stock),
         image
       });
       showToast("Listing updated successfully!");
@@ -149,6 +152,17 @@ export default function EditProduct({ user }) {
               className={`form-input ${error && !price ? 'error' : ''}`}
               value={price} 
               onChange={e => setPrice(e.target.value)} 
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Available Stock</label>
+            <input 
+              className="form-input"
+              type="number"
+              min="1"
+              value={stock} 
+              onChange={e => setStock(e.target.value)} 
             />
           </div>
 

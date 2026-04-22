@@ -10,6 +10,7 @@ export default function AddProduct({ user }) {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("Other");
   const [details, setDetails] = useState("");
+  const [stock, setStock] = useState(1);
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,6 +47,7 @@ export default function AddProduct({ user }) {
         price: Number(price),
         category,
         details,
+        stock: Number(stock),
         image
       });
       showToast("Product listed successfully!");
@@ -125,6 +127,17 @@ export default function AddProduct({ user }) {
               placeholder="0.00" 
               value={price} 
               onChange={e => setPrice(e.target.value)} 
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Available Stock</label>
+            <input 
+              className="form-input"
+              type="number"
+              min="1"
+              value={stock} 
+              onChange={e => setStock(e.target.value)} 
             />
           </div>
 
