@@ -65,11 +65,10 @@ const productSchema = mongoose.Schema({
 });
 
 // Sync stock with sold status
-productSchema.pre('save', function(next) {
+productSchema.pre('save', async function() {
     if (this.sold) {
         this.stock = 0;
     }
-    next();
 });
 
 const Product = mongoose.model('Product', productSchema);
