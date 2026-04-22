@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const generateToken = require('../config/generateToken');
 const { protect } = require('../middleware/authMiddleware');
+const crypto = require('crypto');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -249,6 +250,64 @@ router.put('/users/:id', protect, async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating user:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Forgot Password
+// @route   POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'No account found with that email' });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+        await user.save();
+
+        // In a real app, send email here. For now, return token for testing/demo.
+        console.log(`Reset Token for ${email}: ${resetToken}`);
+        
+        res.json({ 
+            message: 'Password reset instructions sent (check console for token in this demo)',
+            token: resetToken // Returning token directly for this project's convenience
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Reset Password
+// @route   POST /api/auth/reset-password/:token
+router.post('/reset-password/:token', async (req, res) => {
+    try {
+        const resetPasswordToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired reset token' });
+        }
+
+        // Update password
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        res.json({ message: 'Password reset successfully' });
+    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });

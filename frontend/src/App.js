@@ -11,6 +11,8 @@ import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import Cart from "./pages/Cart";
 import ProductDetails from "./pages/ProductDetails";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Chatbot from "./components/Chatbot";
 import Footer from "./components/Footer";
 import Toast from "./components/Toast";
@@ -96,6 +98,8 @@ export default function App() {
                   <Route path="/edit-product/:id" element={<EditProduct user={user} />} />
                   <Route path="/cart" element={<Cart user={user} />} />
                   <Route path="/product/:id" element={<ProductDetails user={user} />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password/:token" element={<ResetPassword />} />
                 </Routes>
               )}
               {isInitializing && <p style={{ textAlign: "center", marginTop: "100px", color: "white" }}>Initializing system...</p>}

@@ -24,6 +24,8 @@ export const authAPI = {
     adminUserUpdate: (id, userData) => api.put(`/auth/users/${id}`, userData),
     getUserByUsername: (username) => api.get(`/auth/user/${username}`),
     rateSeller: (username, rating) => api.post(`/auth/rate/${username}`, { rating }),
+    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+    resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
 };
 
 export const productAPI = {
