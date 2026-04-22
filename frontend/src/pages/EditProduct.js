@@ -58,7 +58,10 @@ export default function EditProduct({ user }) {
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (!title || !description || !price) return setError("Title, Description, and Price are required.");
+    if (title.length < 5) return setError("Title must be at least 5 characters.");
+    if (description.length < 10) return setError("Description must be at least 10 characters.");
     if (isNaN(price) || Number(price) <= 0) return setError("Price must be a valid positive number.");
+    if (!image) return setError("Please upload an image of the item.");
     
     setUpdating(true);
     setError("");
