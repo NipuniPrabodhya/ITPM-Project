@@ -106,26 +106,36 @@ router.put('/profile', protect, async (req, res) => {
 // @desc    Get all users (Admin)
 // @route   GET /api/auth/users
 router.get('/users', protect, async (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(401).json({ message: 'Not authorized as an admin' });
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(401).json({ message: 'Not authorized as an admin' });
+        }
+        const users = await User.find({}).select('-password');
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: error.message });
     }
-    const users = await User.find({});
-    res.json(users);
 });
 
 // @desc    Toggle user status (Admin)
 // @route   PUT /api/auth/users/:id/status
 router.put('/users/:id/status', protect, async (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(401).json({ message: 'Not authorized as an admin' });
-    }
-    const user = await User.findById(req.params.id);
-    if (user) {
-        user.active = !user.active;
-        await user.save();
-        res.json({ message: `User ${user.active ? 'activated' : 'deactivated'}` });
-    } else {
-        res.status(404).json({ message: 'User not found' });
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(401).json({ message: 'Not authorized as an admin' });
+        }
+        const user = await User.findById(req.params.id);
+        if (user) {
+            user.active = !user.active;
+            await user.save();
+            res.json({ message: `User ${user.active ? 'activated' : 'deactivated'}` });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error('Error toggling status:', error);
+        res.status(500).json({ message: error.message });
     }
 });
 
@@ -181,19 +191,41 @@ router.post('/rate/:username', protect, async (req, res) => {
 // @desc    Update user (Admin)
 // @route   PUT /api/auth/users/:id
 router.put('/users/:id', protect, async (req, res) => {
-    if (req.user.role !== 'admin') {
-        return res.status(401).json({ message: 'Not authorized as an admin' });
-    }
-    const user = await User.findById(req.params.id);
-    if (user) {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(401).json({ message: 'Not authorized as an admin' });
+        }
+        
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         const oldUsername = user.username;
         const newUsername = req.body.username || user.username;
+
+        // Check if username/email already taken by another user
+        if (req.body.username && req.body.username !== oldUsername) {
+            const userExists = await User.findOne({ username: req.body.username });
+            if (userExists) {
+                return res.status(400).json({ message: 'Username already taken' });
+            }
+        }
+
+        if (req.body.email && req.body.email !== user.email) {
+            const emailExists = await User.findOne({ email: req.body.email });
+            if (emailExists) {
+                return res.status(400).json({ message: 'Email already taken' });
+            }
+        }
 
         user.username = newUsername;
         user.email = req.body.email || user.email;
         user.phone = req.body.phone || user.phone;
         user.role = req.body.role || user.role;
-        if (req.body.password) {
+        
+        // Only update password if it's a new string and not the placeholder or empty
+        if (req.body.password && req.body.password !== "" && req.body.password !== "••••••••") {
             user.password = req.body.password;
         }
 
@@ -208,14 +240,16 @@ router.put('/users/:id', protect, async (req, res) => {
         }
 
         res.json({
-            _id: updatedUser.id,
+            _id: updatedUser._id,
             username: updatedUser.username,
             email: updatedUser.email,
             role: updatedUser.role,
-            phone: updatedUser.phone
+            phone: updatedUser.phone,
+            active: updatedUser.active
         });
-    } else {
-        res.status(404).json({ message: 'User not found' });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: error.message });
     }
 });
 

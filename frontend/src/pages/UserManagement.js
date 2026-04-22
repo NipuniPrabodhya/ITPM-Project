@@ -73,7 +73,14 @@ export default function UserManagement() {
 
   const handleEditClick = (user) => {
     setEditingUser(user._id);
-    setModalData({ ...user });
+    // Don't include sensitive fields or fields that shouldn't be sent back as-is
+    setModalData({ 
+      username: user.username,
+      email: user.email,
+      phone: user.phone || "",
+      role: user.role,
+      password: "" // Clear password field for security
+    });
   };
 
   const handleModalSave = async (e) => {
@@ -260,13 +267,14 @@ export default function UserManagement() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className="form-label">Password (leave blank to keep current)</label>
                 <div className="password-wrapper">
                   <input 
                     className="form-input" 
                     type={showModalPassword ? "text" : "password"}
-                    value={modalData.password || ""} 
+                    value={modalData.password} 
                     onChange={(e) => setModalData({...modalData, password: e.target.value})} 
+                    placeholder="Enter new password or leave blank"
                   />
                   <button 
                     type="button" 
