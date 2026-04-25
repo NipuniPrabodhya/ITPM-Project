@@ -8,7 +8,7 @@ import { productAPI } from "../services/api";
 
 export default function ProductCard({ product, user }) {
   const { showToast } = useNotification();
-  const { refreshCartCount } = useCart();
+  const { refreshCounts } = useCart();
   const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
@@ -23,7 +23,7 @@ export default function ProductCard({ product, user }) {
     try {
       await productAPI.toggleCart(product._id);
       showToast(product.inCart ? "Removed from cart" : "Added to cart successfully!");
-      refreshCartCount();
+      refreshCounts();
       window.location.reload();
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to update cart", "error");

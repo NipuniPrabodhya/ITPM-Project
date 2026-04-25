@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { orderAPI } from "../services/api";
-import { useNotification } from "../App";
+import { useNotification, useCart } from "../App";
 
 export default function SellerOrders({ user }) {
     const { showToast } = useNotification();
+    const { refreshCounts } = useCart();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -33,6 +34,7 @@ export default function SellerOrders({ user }) {
             showToast("Order verified successfully!");
             setSelectedOrder(null);
             fetchOrders();
+            refreshCounts();
         } catch (error) {
             showToast(error.response?.data?.message || "Verification failed", "error");
         } finally {

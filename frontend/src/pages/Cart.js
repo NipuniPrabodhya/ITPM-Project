@@ -6,7 +6,7 @@ import { productAPI, orderAPI } from "../services/api";
 
 export default function Cart({ user }) {
   const { showToast } = useNotification();
-  const { refreshCartCount } = useCart();
+  const { refreshCounts } = useCart();
   const [cartItems, setCartItems] = useState([]);
   const [purchasedItems, setPurchasedItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +48,7 @@ export default function Cart({ user }) {
       await productAPI.toggleCart(id);
       showToast("Item removed from cart", "info");
       fetchData();
-      refreshCartCount();
+      refreshCounts();
     } catch (error) {
       showToast("Failed to remove item", "error");
     }
@@ -73,7 +73,7 @@ export default function Cart({ user }) {
       
       showToast("Bank slip uploaded! Waiting for seller verification.", "success");
       fetchData();
-      refreshCartCount();
+      refreshCounts();
       setStep(1);
       setSlipImage(null);
     } catch (error) {

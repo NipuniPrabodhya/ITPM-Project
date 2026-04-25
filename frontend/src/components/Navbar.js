@@ -4,7 +4,7 @@ import { useCart } from "../App";
 
 export default function Navbar({ user, logout }) {
   const role = user?.role || "guest";
-  const { cartCount } = useCart() || { cartCount: 0 };
+  const { cartCount, orderCount } = useCart() || { cartCount: 0, orderCount: 0 };
 
   const navModules = [
     { name: "Home", path: "/", roles: ["guest", "student", "admin"] },
@@ -40,10 +40,33 @@ export default function Navbar({ user, logout }) {
                 textDecoration: "none",
                 fontWeight: "bold",
                 padding: "6px 10px",
-                borderRadius: "5px"
+                borderRadius: "5px",
+                position: "relative",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px"
               }}
             >
               {m.name}
+              {m.name === "Manage Orders" && orderCount > 0 && (
+                <span style={{
+                  background: "#f59e0b",
+                  color: "white",
+                  borderRadius: "50%",
+                  fontSize: "0.7rem",
+                  fontWeight: "bold",
+                  minWidth: "18px",
+                  height: "18px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 4px",
+                  lineHeight: 1,
+                  boxShadow: "0 0 6px rgba(245,158,11,0.6)"
+                }}>
+                  {orderCount}
+                </span>
+              )}
             </Link>
           ))}
 
