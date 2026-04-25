@@ -45,4 +45,9 @@ export const orderAPI = {
     verifyOrder: (id) => api.put(`/orders/${id}/verify`),
 };
 
+export const chatAPI = {
+    sendMessage: (message) => api.post('/chat', { message }),
+};
+
 export default api;
+

@@ -1,14 +1,5 @@
-import { useState } from "react";
-
-const responses = {
-  "hi": "Hello! Welcome to UniNexus. How can I help you today?",
-  "hello": "Hi there! Need help with marketplace or registration?",
-  "register": "To register, go to the Register tab and fill your details with a valid @my.sliit.lk email.",
-  "login": "Login using your username and password. All fields are required.",
-  "add product": "To sell a product, go to Sell Product tab and fill the form. Price must be a number.",
-  "buy product": "To buy a product, go to Marketplace and click Buy on available products.",
-  "default": "Sorry, I didn't understand that. Try keywords like 'register', 'login', 'buy product', 'add product'."
-};
+import { useState, useRef, useEffect } from "react";
+import { chatAPI } from "../services/api";
 
 export default function Chatbot({ user }) {
   const [messages, setMessages] = useState([
@@ -16,16 +7,35 @@ export default function Chatbot({ user }) {
   ]);
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  const handleSend = () => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMsg = { from: "user", text: input };
-    const key = input.toLowerCase();
-    const botMsg = { from: "bot", text: responses[key] || responses["default"] };
-
-    setMessages([...messages, userMsg, botMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
+    setIsLoading(true);
+
+    try {
+        const response = await chatAPI.sendMessage(input);
+        const botMsg = { from: "bot", text: response.data.reply };
+        setMessages(prev => [...prev, botMsg]);
+    } catch (error) {
+        const errorMsg = { from: "bot", text: "Oops, I'm having trouble connecting right now. Try again later!" };
+        setMessages(prev => [...prev, errorMsg]);
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -80,6 +90,21 @@ export default function Chatbot({ user }) {
                 </div>
               </div>
             ))}
+            {isLoading && (
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                <div style={{
+                  padding: "12px 16px",
+                  borderRadius: "18px",
+                  borderBottomLeftRadius: "4px",
+                  backgroundColor: "var(--bg-tertiary)",
+                  color: "white",
+                  fontSize: "0.95rem",
+                }}>
+                  <span className="typing-indicator">...</span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
