@@ -13,6 +13,7 @@ import Cart from "./pages/Cart";
 import ProductDetails from "./pages/ProductDetails";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import SellerOrders from "./pages/SellerOrders";
 import Chatbot from "./components/Chatbot";
 import Footer from "./components/Footer";
 import Toast from "./components/Toast";
@@ -100,6 +101,7 @@ export default function App() {
                   <Route path="/product/:id" element={<ProductDetails user={user} />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password/:token" element={<ResetPassword />} />
+                  <Route path="/seller-orders" element={user && (user.role === "admin" || user.role === "student") ? <SellerOrders user={user} /> : <Navigate to="/" />} />
                 </Routes>
               )}
               {isInitializing && <p style={{ textAlign: "center", marginTop: "100px", color: "white" }}>Initializing system...</p>}

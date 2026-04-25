@@ -14,6 +14,7 @@ export default function Navbar({ user, logout }) {
     { name: "Admin Dashboard", path: "/user-management", roles: ["admin"] },
     { name: "Marketplace", path: "/view-products", roles: ["guest", "student", "admin"] },
     { name: "Create Listing", path: "/add-product", roles: ["student", "admin"] },
+    { name: "Manage Orders", path: "/seller-orders", roles: ["student", "admin"] },
   ];
 
   return (
