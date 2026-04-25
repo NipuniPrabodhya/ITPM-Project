@@ -151,6 +151,7 @@ export default function SellerOrders({ user }) {
                             >
                                 Close
                             </button>
+                        </div>
                     </div>
                 </div>
             )}
