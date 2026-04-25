@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 // Load env vars
 dotenv.config();
@@ -25,6 +26,7 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Root route
 app.get('/', (req, res) => {
