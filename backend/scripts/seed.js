@@ -103,7 +103,7 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=400',
                 views: 15,
                 sold: false,
-                category: 'Clothing'
+                category: 'Fashion'
             },
             {
                 title: 'Organic Chemistry II Textbook',
@@ -114,7 +114,7 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&q=80&w=400',
                 views: 28,
                 sold: false,
-                category: 'Books'
+                category: 'Education'
             },
             {
                 title: 'Casio Scientific Calculator',
@@ -125,7 +125,7 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1574607383476-f517f260d30b?auto=format&fit=crop&q=80&w=400',
                 views: 45,
                 sold: false,
-                category: 'Stationary'
+                category: 'Education'
             },
             {
                 title: 'MacBook Air M1 (2020)',
@@ -158,7 +158,7 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400',
                 views: 22,
                 sold: false,
-                category: 'Bags'
+                category: 'Fashion'
             },
             {
                 title: 'LED Desk Lamp',
@@ -169,7 +169,7 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80&w=400',
                 views: 18,
                 sold: false,
-                category: 'Stationary'
+                category: 'Education'
             },
             {
                 title: 'Sony Noise Cancelling Headphones',
@@ -213,7 +213,7 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1532298229144-0ee0c57512c7?auto=format&fit=crop&q=80&w=400',
                 views: 110,
                 sold: false,
-                category: 'Vehicles'
+                category: 'Other'
             },
             {
                 title: 'Classic City Commuter Bike',
@@ -224,7 +224,7 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=400',
                 views: 65,
                 sold: false,
-                category: 'Vehicles'
+                category: 'Other'
             },
             {
                 title: 'Data Structures and Algorithms in Java',
@@ -232,10 +232,10 @@ const seedData = async () => {
                 price: 3500,
                 owner: 'admin',
                 details: 'No markings on pages. Very helpful for coding interviews.',
-                image: 'https://images.unsplash.com/photo-1589998059171-988d887df643?auto=format&fit=crop&q=80&w=400',
+                image: 'https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?auto=format&fit=crop&q=80&w=400',
                 views: 95,
                 sold: false,
-                category: 'Books'
+                category: 'Education'
             },
             {
                 title: 'Introduction to Algorithms (CLRS)',
@@ -246,7 +246,73 @@ const seedData = async () => {
                 image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=400',
                 views: 150,
                 sold: false,
-                category: 'Books'
+                category: 'Education'
+            },
+            {
+                title: 'Asus ROG Strix Gaming Laptop',
+                description: 'RTX 3060, 16GB RAM, 512GB SSD. RGB keyboard.',
+                price: 245000,
+                owner: 'student2',
+                details: 'Only 6 months old. Plays all modern games at ultra settings.',
+                image: 'https://images.unsplash.com/photo-1544117518-33957289df3d?auto=format&fit=crop&q=80&w=400',
+                views: 88,
+                sold: false,
+                category: 'Electronics'
+            },
+            {
+                title: 'Acoustic Guitar - Yamaha',
+                description: 'Perfect for beginners. Includes a gig bag.',
+                price: 15000,
+                owner: 'student3',
+                details: 'Good sound quality. A few minor scratches on the back.',
+                image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&q=80&w=400',
+                views: 42,
+                sold: false,
+                category: 'Other'
+            },
+            {
+                title: 'Nespresso Coffee Maker',
+                description: 'Mini espresso machine. Fast heat up.',
+                price: 12500,
+                owner: 'student4',
+                details: 'Used for one semester. Great for coffee lovers.',
+                image: 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?auto=format&fit=crop&q=80&w=400',
+                views: 31,
+                sold: false,
+                category: 'Home & Living'
+            },
+            {
+                title: 'Ergonomic Study Chair',
+                description: 'Breathable mesh back with lumbar support.',
+                price: 8500,
+                owner: 'tester',
+                details: 'Very comfortable for long study sessions.',
+                image: 'https://images.unsplash.com/photo-1505797149-43b007664976?auto=format&fit=crop&q=80&w=400',
+                views: 25,
+                sold: false,
+                category: 'Home & Living'
+            },
+            {
+                title: 'Logitech C920 HD Pro Webcam',
+                description: 'Full HD 1080p video calling with stereo audio.',
+                price: 9500,
+                owner: 'nipuni',
+                details: 'Used for online classes. Crystal clear quality.',
+                image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=400',
+                views: 19,
+                sold: false,
+                category: 'Electronics'
+            },
+            {
+                title: 'Fundamentals of Physics',
+                description: 'Halliday, Resnick, Walker. 11th Edition.',
+                price: 4200,
+                owner: 'student1',
+                details: 'No highlights. Includes E-book code.',
+                image: 'https://images.unsplash.com/photo-1632583306532-68078696c141?auto=format&fit=crop&q=80&w=400',
+                views: 14,
+                sold: false,
+                category: 'Education'
             }
         ];
 
