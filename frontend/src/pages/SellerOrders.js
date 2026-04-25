@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { orderAPI } from "../services/api";
 import { useNotification, useCart } from "../App";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function SellerOrders({ user }) {
     const { showToast } = useNotification();
@@ -9,6 +10,7 @@ export default function SellerOrders({ user }) {
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isVerifying, setIsVerifying] = useState(false);
+    const [orderToVerify, setOrderToVerify] = useState(null);
 
     const fetchOrders = useCallback(async () => {
         try {
@@ -25,14 +27,15 @@ export default function SellerOrders({ user }) {
         fetchOrders();
     }, [fetchOrders]);
 
-    const handleVerify = async (id) => {
-        if (!window.confirm("Are you sure you want to verify this payment? This will update your stock and mark products as sold.")) return;
+    const handleVerify = async () => {
+        if (!orderToVerify) return;
         
         setIsVerifying(true);
         try {
-            await orderAPI.verifyOrder(id);
+            await orderAPI.verifyOrder(orderToVerify._id);
             showToast("Order verified successfully!");
             setSelectedOrder(null);
+            setOrderToVerify(null);
             fetchOrders();
             refreshCounts();
         } catch (error) {
@@ -135,7 +138,7 @@ export default function SellerOrders({ user }) {
                             <button 
                                 className="btn-primary" 
                                 style={{ flex: 1, padding: "12px" }}
-                                onClick={() => handleVerify(selectedOrder._id)}
+                                onClick={() => setOrderToVerify(selectedOrder)}
                                 disabled={isVerifying}
                             >
                                 {isVerifying ? "Verifying..." : "Confirm Payment & Process Order"}
@@ -148,10 +151,19 @@ export default function SellerOrders({ user }) {
                             >
                                 Close
                             </button>
-                        </div>
                     </div>
                 </div>
             )}
+
+            <ConfirmModal 
+                isOpen={!!orderToVerify}
+                title="Verify Payment"
+                message={`Are you sure you want to verify this payment of Rs. ${orderToVerify?.totalAmount.toLocaleString()}? This will update your product stock and mark items as sold.`}
+                onConfirm={handleVerify}
+                onCancel={() => setOrderToVerify(null)}
+                confirmText="Confirm Verification"
+                confirmColor="var(--success-color)"
+            />
         </div>
     );
 }
