@@ -8,6 +8,8 @@ test.describe('UniNexus Marketplace - User Journeys', () => {
   });
 
   test('User can view the marketplace and see products', async ({ page }) => {
+    await page.goto('http://localhost:3000/view-products');
+    
     // Wait for the hero banner to appear
     await expect(page.locator('h1.hero-title')).toContainText('UniNexus Marketplace');
     
@@ -20,6 +22,8 @@ test.describe('UniNexus Marketplace - User Journeys', () => {
   });
 
   test('User can search and filter products', async ({ page }) => {
+    await page.goto('http://localhost:3000/view-products');
+    
     // Type in the search box
     const searchInput = page.getByPlaceholder('Search items by title or description...');
     await searchInput.fill('laptop');
@@ -66,6 +70,6 @@ test.describe('UniNexus Marketplace - User Journeys', () => {
 
     // Click Register
     await page.click('text=Register');
-    await expect(page.locator('h2')).toContainText('Join UniNexus');
+    await expect(page.locator('h2')).toContainText('Create Account');
   });
 });
