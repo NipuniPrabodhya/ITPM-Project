@@ -182,7 +182,7 @@ export default function Cart({ user }) {
             <EmptyCartView />
           )}
 
-          {purchasedItems.length > 0 && (
+          {orders.length > 0 && (
             <div style={{ marginTop: "40px" }}>
               <h3 style={{ color: "var(--text-primary)", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
                 <span>📦</span> Your Orders
