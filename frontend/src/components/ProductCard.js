@@ -17,6 +17,7 @@ export default function ProductCard({ product, user }) {
   const handleBuy = async () => {
     if (!user) return showToast("Please login to buy items", "error");
     if (product.sold) return showToast("Item already sold", "error");
+    if (product.isPending) return showToast("Item is currently being purchased by another user", "warning");
     
     setLoadingAction(true);
     try {
@@ -78,8 +79,8 @@ export default function ProductCard({ product, user }) {
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
           <span style={{ fontWeight: "bold", fontSize: "1.2rem", color: "var(--accent-primary)" }}>Rs. {product.price.toLocaleString()}</span>
-          <span className={`badge ${product.sold || product.stock === 0 ? "badge-error" : "badge-success"}`} style={{ fontSize: "0.75rem" }}>
-            {product.sold || product.stock === 0 ? "Sold Out" : "Available"}
+          <span className={`badge ${product.sold || product.stock === 0 ? "badge-error" : product.isPending ? "badge-warning" : "badge-success"}`} style={{ fontSize: "0.75rem" }}>
+            {product.sold || product.stock === 0 ? "Sold Out" : product.isPending ? "Processing" : "Available"}
           </span>
         </div>
         <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "0 0 15px 0" }}>
@@ -114,12 +115,12 @@ export default function ProductCard({ product, user }) {
           {user && user.role === "student" && product.owner !== user.username && !product.sold && (
             <button 
               onClick={handleBuy} 
-              disabled={product.stock <= 0}
+              disabled={product.stock <= 0 || product.isPending}
               style={{ width: "100%", background: product.stock > 0 ? "var(--success-color)" : "var(--text-secondary)", color: "white", padding: "8px 0", border: "none", borderRadius: "6px", cursor: product.stock > 0 ? "pointer" : "not-allowed", fontWeight: "bold", fontSize: "0.9rem", marginTop: "8px", transition: "0.2s opacity" }} 
               onMouseOver={e=> { if(product.stock > 0) e.target.style.opacity=0.8 }} 
               onMouseOut={e=> { if(product.stock > 0) e.target.style.opacity=1 }}
             >
-              {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+              {product.stock > 0 ? (product.isPending ? "Pending Verification" : "Add to Cart") : "Out of Stock"}
             </button>
           )}
         </div>

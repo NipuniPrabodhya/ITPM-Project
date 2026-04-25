@@ -135,6 +135,9 @@ router.put('/:id/cart', protect, async (req, res) => {
             if (product.stock <= 0) {
                 return res.status(400).json({ message: 'Product is out of stock' });
             }
+            if (product.isPending) {
+                return res.status(400).json({ message: 'Product is currently being purchased and is pending verification' });
+            }
             if (product.inCart && product.cartOwner !== req.user.username) {
                 return res.status(400).json({ message: 'Product already in another person\'s cart' });
             }
