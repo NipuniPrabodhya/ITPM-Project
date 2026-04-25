@@ -2,27 +2,30 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotification } from "../App";
 import { useCart } from "../App";
-import { productAPI } from "../services/api";
+import { productAPI, orderAPI } from "../services/api";
 
 export default function Cart({ user }) {
   const { showToast } = useNotification();
-  const { refreshCartCount } = useCart();
+  const { refreshCounts } = useCart();
   const [cartItems, setCartItems] = useState([]);
   const [purchasedItems, setPurchasedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [step, setStep] = useState(1); // 1: View Cart, 2: Checkout
-  const [paymentMethod, setPaymentMethod] = useState("card");
-  const [cardData, setCardData] = useState({ number: "", expiry: "", cvv: "" });
   const [isProcessing, setIsProcessing] = useState(false);
   const [slipImage, setSlipImage] = useState(null);
+  const [orders, setOrders] = useState([]);
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await productAPI.getProducts();
-      const allProducts = response.data;
+      const [prodRes, orderRes] = await Promise.all([
+        productAPI.getProducts(),
+        orderAPI.getBuyerOrders()
+      ]);
+      const allProducts = prodRes.data;
       setCartItems(allProducts.filter(p => p.inCart && p.cartOwner === user.username));
       setPurchasedItems(allProducts.filter(p => p.sold && p.buyer === user.username));
+      setOrders(orderRes.data);
     } catch (error) {
       console.error("Failed to fetch cart data", error);
     } finally {
@@ -45,7 +48,7 @@ export default function Cart({ user }) {
       await productAPI.toggleCart(id);
       showToast("Item removed from cart", "info");
       fetchData();
-      refreshCartCount();
+      refreshCounts();
     } catch (error) {
       showToast("Failed to remove item", "error");
     }
@@ -66,12 +69,13 @@ export default function Cart({ user }) {
     setIsProcessing(true);
     try {
       const productIds = cartItems.map(item => item._id);
-      await productAPI.checkout(productIds);
+      await orderAPI.placeOrder({ productIds, slipImage });
       
-      showToast("Payment Successful! Your order is being processed.");
+      showToast("Bank slip uploaded! Waiting for seller verification.", "success");
       fetchData();
-      refreshCartCount();
+      refreshCounts();
       setStep(1);
+      setSlipImage(null);
     } catch (error) {
       showToast(error.response?.data?.message || "Payment failed", "error");
     } finally {
@@ -139,130 +143,83 @@ export default function Cart({ user }) {
             ) : (
               <div className="card" style={{ padding: "30px" }}>
                 {/* ... existing payment method selection and forms ... */}
-                <h3 style={{ marginBottom: "20px", color: "var(--text-primary)" }}>Select Payment Method</h3>
+                <h3 style={{ marginBottom: "20px", color: "var(--text-primary)" }}>Bank Transfer Payment</h3>
                 
-                <div style={{ display: "flex", gap: "15px", marginBottom: "30px" }}>
-                  <div 
-                    className={`payment-option ${paymentMethod === "card" ? "active" : ""}`} 
-                    onClick={() => setPaymentMethod("card")}
-                    style={{ flex: 1 }}
-                  >
-                    <span style={{ fontSize: "1.5rem" }}>💳</span>
-                    <div>
-                      <strong style={{ display: "block", color: "var(--text-primary)" }}>Credit/Debit Card</strong>
-                      <small style={{ color: "var(--text-secondary)" }}>Instant verification</small>
-                    </div>
+                <div style={{ animation: "fadeIn 0.3s ease" }}>
+                  <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "20px" }}>
+                    <h4 style={{ margin: "0 0 10px 0", color: "var(--text-primary)" }}>Official Bank Details</h4>
+                    <p style={{ margin: "5px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Bank: UniNexus Campus Bank</p>
+                    <p style={{ margin: "5px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Account: 1000 9999 8888</p>
+                    <p style={{ margin: "5px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Name: UniNexus Marketplace</p>
+                    <p style={{ margin: "5px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Branch: University Branch</p>
                   </div>
-                  
-                  <div 
-                    className={`payment-option ${paymentMethod === "slip" ? "active" : ""}`} 
-                    onClick={() => setPaymentMethod("slip")}
-                    style={{ flex: 1 }}
-                  >
-                    <span style={{ fontSize: "1.5rem" }}>🏦</span>
-                    <div>
-                      <strong style={{ display: "block", color: "var(--text-primary)" }}>Bank Transfer</strong>
-                      <small style={{ color: "var(--text-secondary)" }}>Upload payment slip</small>
-                    </div>
+
+                  <div className="slip-dropzone" onClick={() => document.getElementById("slip-input").click()}>
+                    <input 
+                      type="file" 
+                      id="slip-input" 
+                      hidden 
+                      accept="image/*" 
+                      onChange={handleImageUpload} 
+                    />
+                    {slipImage ? (
+                      <div>
+                        <img src={slipImage} alt="slip" className="slip-preview" />
+                        <p style={{ color: "var(--accent-primary)", marginTop: "10px", fontSize: "0.9rem" }}>Slip Uploaded! Click to change.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <span style={{ fontSize: "2.5rem" }}>📄</span>
+                        <p style={{ color: "var(--text-primary)", fontWeight: "600", marginTop: "10px" }}>Click to upload payment slip</p>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Image files (JPG, PNG) accepted</p>
+                      </>
+                    )}
                   </div>
                 </div>
-
-                {paymentMethod === "card" ? (
-                  <div style={{ animation: "fadeIn 0.3s ease" }}>
-                    <div className="form-group">
-                      <label className="form-label">Card Number</label>
-                      <input 
-                        className="form-input" 
-                        placeholder="XXXX XXXX XXXX XXXX" 
-                        value={cardData.number}
-                        onChange={e => setCardData({...cardData, number: e.target.value})}
-                      />
-                    </div>
-                    <div style={{ display: "flex", gap: "15px" }}>
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label className="form-label">Expiry Date</label>
-                        <input 
-                          className="form-input" 
-                          placeholder="MM/YY" 
-                          value={cardData.expiry}
-                          onChange={e => setCardData({...cardData, expiry: e.target.value})}
-                        />
-                      </div>
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label className="form-label">CVV</label>
-                        <input 
-                          className="form-input" 
-                          placeholder="123" 
-                          value={cardData.cvv}
-                          onChange={e => setCardData({...cardData, cvv: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ animation: "fadeIn 0.3s ease" }}>
-                    <div style={{ background: "rgba(255,255,255,0.05)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "20px" }}>
-                      <h4 style={{ margin: "0 0 10px 0", color: "var(--text-primary)" }}>Bank Details</h4>
-                      <p style={{ margin: "5px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Bank: UniNexus Federal Bank</p>
-                      <p style={{ margin: "5px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Account: 1000 2345 6789</p>
-                      <p style={{ margin: "5px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Branch: Campus Core</p>
-                    </div>
-
-                    <div className="slip-dropzone" onClick={() => document.getElementById("slip-input").click()}>
-                      <input 
-                        type="file" 
-                        id="slip-input" 
-                        hidden 
-                        accept="image/*" 
-                        onChange={handleImageUpload} 
-                      />
-                      {slipImage ? (
-                        <div>
-                          <img src={slipImage} alt="slip" className="slip-preview" />
-                          <p style={{ color: "var(--accent-primary)", marginTop: "10px", fontSize: "0.9rem" }}>Slip Uploaded! Click to change.</p>
-                        </div>
-                      ) : (
-                        <>
-                          <span style={{ fontSize: "2.5rem" }}>📄</span>
-                          <p style={{ color: "var(--text-primary)", fontWeight: "600", marginTop: "10px" }}>Click to upload payment slip</p>
-                          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>JPG, PNG or PDF accepted</p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             )
           ) : (
             <EmptyCartView />
           )}
 
-          {purchasedItems.length > 0 && (
+          {orders.length > 0 && (
             <div style={{ marginTop: "40px" }}>
               <h3 style={{ color: "var(--text-primary)", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
-                <span>📦</span> Your Purchase History
+                <span>📦</span> Your Orders
               </h3>
-              <div style={{ display: "grid", gap: "15px" }}>
-                {purchasedItems.map(item => (
-                  <div key={item._id} className="cart-item" style={{ opacity: 0.9 }}>
-                    <div style={{ width: "80px", height: "80px", background: "rgba(0,0,0,0.1)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border-color)", overflow: "hidden" }}>
-                      {item.image ? (
-                        <img src={item.image} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : (
-                        <span style={{ fontSize: "1.5rem" }}>🏷️</span>
-                      )}
+              <div style={{ display: "grid", gap: "20px" }}>
+                {orders.length === 0 && <p style={{ color: "var(--text-secondary)" }}>No orders yet.</p>}
+                {orders.map(order => (
+                  <div key={order._id} className="card" style={{ padding: "20px", border: "1px solid var(--border-color)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
+                      <div>
+                        <span style={{ 
+                          padding: "4px 10px", 
+                          borderRadius: "20px", 
+                          fontSize: "0.75rem", 
+                          fontWeight: "bold",
+                          textTransform: "uppercase",
+                          background: order.status === 'completed' ? 'rgba(0, 200, 83, 0.1)' : 'rgba(255, 171, 0, 0.1)',
+                          color: order.status === 'completed' ? '#00c853' : '#ffab00',
+                          border: `1px solid ${order.status === 'completed' ? '#00c853' : '#ffab00'}`
+                        }}>
+                          {order.status}
+                        </span>
+                        <p style={{ margin: "10px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                          Seller: {order.seller} | Date: {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ margin: 0, fontWeight: "bold", color: "var(--accent-primary)" }}>Rs. {order.totalAmount.toLocaleString()}</p>
+                      </div>
                     </div>
-                    <div style={{ flexGrow: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <h4 style={{ margin: "0 0 5px 0", color: "var(--text-primary)" }}>{item.title}</h4>
-                        <span style={{ fontWeight: "bold", color: "var(--text-secondary)" }}>Rs. {item.price.toLocaleString()}</span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <p style={{ color: "var(--text-secondary)", fontSize: "0.8rem", margin: 0 }}>Date: {item.purchaseDate}</p>
-                        <Link to={`/product/${item._id}`} style={{ textDecoration: "none", color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: "600" }}>
-                          View Again
-                        </Link>
-                      </div>
+                    <div style={{ display: "grid", gap: "10px" }}>
+                      {order.products.map(item => (
+                        <div key={item.productId} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+                          <span style={{ color: "var(--text-primary)" }}>{item.title}</span>
+                          <span style={{ color: "var(--text-secondary)" }}>Rs. {item.price.toLocaleString()}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -309,9 +266,9 @@ export default function Cart({ user }) {
                   className="btn-primary" 
                   style={{ width: "100%", padding: "15px", position: "relative" }}
                   onClick={finalizePurchase}
-                  disabled={isProcessing || (paymentMethod === "slip" && !slipImage)}
+                  disabled={isProcessing || !slipImage}
                 >
-                  {isProcessing ? "Processing..." : "Complete Purchase"}
+                  {isProcessing ? "Processing..." : "Submit Bank Slip"}
                 </button>
                 <button 
                   style={{ background: "transparent", color: "var(--text-secondary)", border: "none", cursor: "pointer", fontSize: "0.9rem" }}

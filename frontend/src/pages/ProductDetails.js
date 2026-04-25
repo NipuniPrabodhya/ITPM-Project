@@ -127,6 +127,7 @@ export default function ProductDetails({ user }) {
                 {product.owner}
               </span>
             </p>
+            <p style={{ margin: 0, color: "var(--text-secondary)" }}><strong style={{ color: "var(--text-primary)" }}>Stock:</strong> {product.stock > 0 ? product.stock : "Out of stock"}</p>
             <p style={{ margin: 0, color: "var(--text-secondary)" }}><strong style={{ color: "var(--text-primary)" }}>Views:</strong> {product.views}</p>
           </div>
 
@@ -135,9 +136,10 @@ export default function ProductDetails({ user }) {
             {user && user.role === "student" && user.username !== product.owner && !product.sold && (
               <button
                 onClick={handleAddToCart}
-                style={{ background: "var(--success-color)", color: "white", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", border: "none", cursor: "pointer" }}
+                disabled={product.stock <= 0}
+                style={{ background: product.stock > 0 ? "var(--success-color)" : "var(--text-secondary)", color: "white", padding: "8px 16px", borderRadius: "6px", fontWeight: "bold", border: "none", cursor: product.stock > 0 ? "pointer" : "not-allowed" }}
               >
-                Add to Cart
+                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
               </button>
             )}
 

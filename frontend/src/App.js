@@ -11,10 +11,13 @@ import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import Cart from "./pages/Cart";
 import ProductDetails from "./pages/ProductDetails";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import SellerOrders from "./pages/SellerOrders";
 import Chatbot from "./components/Chatbot";
 import Footer from "./components/Footer";
 import Toast from "./components/Toast";
-import { productAPI } from "./services/api";
+import { productAPI, orderAPI } from "./services/api";
 
 // Create Notification Context
 const NotificationContext = createContext();
@@ -32,29 +35,40 @@ export default function App() {
   const [toast, setToast] = useState({ message: "", type: "success" });
   const [isInitializing, setIsInitializing] = useState(true);
   const [cartCount, setCartCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
 
   React.useEffect(() => {
     setIsInitializing(false);
   }, []);
 
-  const refreshCartCount = useCallback((currentUser) => {
+  const refreshCounts = useCallback((currentUser) => {
     const activeUser = currentUser || user;
-    if (activeUser && activeUser.role === "student") {
-      productAPI.getProducts()
-        .then(res => {
-          const count = res.data.filter(p => p.inCart && p.cartOwner === activeUser.username).length;
-          setCartCount(count);
-        })
-        .catch(() => setCartCount(0));
+    if (activeUser) {
+      if (activeUser.role === "student") {
+        productAPI.getProducts()
+          .then(res => {
+            const count = res.data.filter(p => p.inCart && p.cartOwner === activeUser.username).length;
+            setCartCount(count);
+          })
+          .catch(() => setCartCount(0));
+          
+        orderAPI.getSellerOrders()
+          .then(res => {
+            const count = res.data.filter(o => o.status === 'processing').length;
+            setOrderCount(count);
+          })
+          .catch(() => setOrderCount(0));
+      }
     } else {
       setCartCount(0);
+      setOrderCount(0);
     }
   }, [user]);
 
-  // Fetch cart count when user logs in or changes
+  // Fetch counts when user logs in or changes
   React.useEffect(() => {
-    refreshCartCount();
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+    refreshCounts();
+  }, [user, refreshCounts]);
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -78,7 +92,7 @@ export default function App() {
 
   return (
     <NotificationContext.Provider value={{ showToast }}>
-      <CartContext.Provider value={{ cartCount, refreshCartCount }}>
+      <CartContext.Provider value={{ cartCount, orderCount, refreshCounts }}>
         <Router>
           <div className="app-container">
             <Navbar user={user} logout={logout} />
@@ -96,6 +110,9 @@ export default function App() {
                   <Route path="/edit-product/:id" element={<EditProduct user={user} />} />
                   <Route path="/cart" element={<Cart user={user} />} />
                   <Route path="/product/:id" element={<ProductDetails user={user} />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password/:token" element={<ResetPassword />} />
+                  <Route path="/seller-orders" element={user && (user.role === "admin" || user.role === "student") ? <SellerOrders user={user} /> : <Navigate to="/" />} />
                 </Routes>
               )}
               {isInitializing && <p style={{ textAlign: "center", marginTop: "100px", color: "white" }}>Initializing system...</p>}

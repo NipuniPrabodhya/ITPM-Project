@@ -8,7 +8,7 @@ import { productAPI } from "../services/api";
 
 export default function ProductCard({ product, user }) {
   const { showToast } = useNotification();
-  const { refreshCartCount } = useCart();
+  const { refreshCounts } = useCart();
   const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
@@ -17,12 +17,13 @@ export default function ProductCard({ product, user }) {
   const handleBuy = async () => {
     if (!user) return showToast("Please login to buy items", "error");
     if (product.sold) return showToast("Item already sold", "error");
+    if (product.isPending) return showToast("Item is currently being purchased by another user", "warning");
     
     setLoadingAction(true);
     try {
       await productAPI.toggleCart(product._id);
       showToast(product.inCart ? "Removed from cart" : "Added to cart successfully!");
-      refreshCartCount();
+      refreshCounts();
       window.location.reload();
     } catch (error) {
       showToast(error.response?.data?.message || "Failed to update cart", "error");
@@ -76,12 +77,15 @@ export default function ProductCard({ product, user }) {
         <h3 style={{ margin: "0 0 10px 0", color: "var(--text-primary)", fontSize: "1.2rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.title}</h3>
         <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", margin: "0 0 15px 0", flexGrow: 1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{product.description}</p>
         
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
           <span style={{ fontWeight: "bold", fontSize: "1.2rem", color: "var(--accent-primary)" }}>Rs. {product.price.toLocaleString()}</span>
-          <span className={`badge ${product.sold ? "badge-error" : "badge-success"}`} style={{ fontSize: "0.75rem" }}>
-            {product.sold ? "Sold Out" : "Available"}
+          <span className={`badge ${product.sold || product.stock === 0 ? "badge-error" : product.isPending ? "badge-warning" : "badge-success"}`} style={{ fontSize: "0.75rem" }}>
+            {product.sold || product.stock === 0 ? "Sold Out" : product.isPending ? "Processing" : "Available"}
           </span>
         </div>
+        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "0 0 15px 0" }}>
+          Stock: <strong style={{ color: product.stock > 0 ? "var(--success-color)" : "var(--error-color)" }}>{product.stock > 0 ? product.stock : "Out of stock"}</strong>
+        </p>
         
         <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "0 0 20px 0" }}>
           Seller: <strong 
@@ -109,7 +113,15 @@ export default function ProductCard({ product, user }) {
           )}
 
           {user && user.role === "student" && product.owner !== user.username && !product.sold && (
-            <button onClick={handleBuy} style={{ width: "100%", background: "var(--success-color)", color: "white", padding: "8px 0", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "0.9rem", marginTop: "8px", transition: "0.2s opacity" }} onMouseOver={e=>e.target.style.opacity=0.8} onMouseOut={e=>e.target.style.opacity=1}>Add to Cart</button>
+            <button 
+              onClick={handleBuy} 
+              disabled={product.stock <= 0 || product.isPending}
+              style={{ width: "100%", background: product.stock > 0 ? "var(--success-color)" : "var(--text-secondary)", color: "white", padding: "8px 0", border: "none", borderRadius: "6px", cursor: product.stock > 0 ? "pointer" : "not-allowed", fontWeight: "bold", fontSize: "0.9rem", marginTop: "8px", transition: "0.2s opacity" }} 
+              onMouseOver={e=> { if(product.stock > 0) e.target.style.opacity=0.8 }} 
+              onMouseOut={e=> { if(product.stock > 0) e.target.style.opacity=1 }}
+            >
+              {product.stock > 0 ? (product.isPending ? "Pending Verification" : "Add to Cart") : "Out of Stock"}
+            </button>
           )}
         </div>
       </div>

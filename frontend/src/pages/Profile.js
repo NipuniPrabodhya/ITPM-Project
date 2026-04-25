@@ -19,17 +19,20 @@ export default function Profile({ user, setUser }) {
     e.preventDefault();
     if (!username || !email || !phone) return setError("Basic fields required");
     
+    // Email domain validation
+    if (!email.endsWith("@my.sliit.lk")) return setError("Email must be @my.sliit.lk");
+
     // Password validation only if changing
     if (password) {
       if (password.length < 8) return setError("Password must be at least 8 characters");
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
       if (!passwordRegex.test(password))
-        return setError("Pass must include lower, upper, number, special character");
+        return setError("Password must include lowercase, uppercase, number, and special character");
     }
 
     // Phone validation
     if (!/^0\d{9}$/.test(phone))
-      return setError("Phone must start with 0 and be exactly 10 digits");
+      return setError("Phone number must start with 0 and be exactly 10 digits");
     
     setLoading(true);
     setError("");

@@ -12,6 +12,7 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null);
   const [modalData, setModalData] = useState({});
   const [showModalPassword, setShowModalPassword] = useState(false);
+  const [modalError, setModalError] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -73,18 +74,43 @@ export default function UserManagement() {
 
   const handleEditClick = (user) => {
     setEditingUser(user._id);
-    setModalData({ ...user });
+    setModalError("");
+    // Don't include sensitive fields or fields that shouldn't be sent back as-is
+    setModalData({ 
+      username: user.username,
+      email: user.email,
+      phone: user.phone || "",
+      role: user.role,
+      password: "" // Clear password field for security
+    });
   };
 
   const handleModalSave = async (e) => {
     e.preventDefault();
+    const { username, email, phone, password } = modalData;
+
+    if (!username || !email || !phone) return setModalError("Username, Email, and Phone are required");
+    
+    if (!email.endsWith("@my.sliit.lk")) return setModalError("Email must be @my.sliit.lk");
+
+    if (password && password !== "") {
+      if (password.length < 8) return setModalError("Password must be at least 8 characters");
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+      if (!passwordRegex.test(password))
+        return setModalError("Password must include lowercase, uppercase, number, and special character");
+    }
+
+    if (!/^0\d{9}$/.test(phone))
+      return setModalError("Phone number must start with 0 and be exactly 10 digits");
+
     try {
+      setModalError("");
       await authAPI.adminUserUpdate(editingUser, modalData);
       showToast("User details updated successfully!", "success");
       setEditingUser(null);
       fetchUsers();
     } catch (error) {
-      showToast(error.response?.data?.message || "Failed to save user details", "error");
+      setModalError(error.response?.data?.message || "Failed to save user details");
     }
   };
 
@@ -234,6 +260,7 @@ export default function UserManagement() {
               <h3>Edit User</h3>
               <button className="modal-close" onClick={() => setEditingUser(null)}>×</button>
             </div>
+            {modalError && <p style={{ color: "var(--error-color)", textAlign: "center", marginBottom: "15px", fontSize: "0.9rem" }}>{modalError}</p>}
             <form onSubmit={handleModalSave}>
               <div className="form-group">
                 <label className="form-label">Username</label>
@@ -260,13 +287,14 @@ export default function UserManagement() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className="form-label">Password (leave blank to keep current)</label>
                 <div className="password-wrapper">
                   <input 
                     className="form-input" 
                     type={showModalPassword ? "text" : "password"}
-                    value={modalData.password || ""} 
+                    value={modalData.password} 
                     onChange={(e) => setModalData({...modalData, password: e.target.value})} 
+                    placeholder="Enter new password or leave blank"
                   />
                   <button 
                     type="button" 

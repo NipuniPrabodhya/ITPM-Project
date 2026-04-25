@@ -10,6 +10,7 @@ export default function AddProduct({ user }) {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("Other");
   const [details, setDetails] = useState("");
+  const [stock, setStock] = useState(1);
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,10 @@ export default function AddProduct({ user }) {
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!title || !description || !price) return setError("Title, Description, and Price are required.");
+    if (title.length < 5) return setError("Title must be at least 5 characters.");
+    if (description.length < 10) return setError("Description must be at least 10 characters.");
     if (isNaN(price) || Number(price) <= 0) return setError("Price must be a valid positive number.");
+    if (!image) return setError("Please upload an image of the item.");
     
     setLoading(true);
     setError("");
@@ -43,6 +47,7 @@ export default function AddProduct({ user }) {
         price: Number(price),
         category,
         details,
+        stock: Number(stock),
         image
       });
       showToast("Product listed successfully!");
@@ -122,6 +127,17 @@ export default function AddProduct({ user }) {
               placeholder="0.00" 
               value={price} 
               onChange={e => setPrice(e.target.value)} 
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Available Stock</label>
+            <input 
+              className="form-input"
+              type="number"
+              min="1"
+              value={stock} 
+              onChange={e => setStock(e.target.value)} 
             />
           </div>
 

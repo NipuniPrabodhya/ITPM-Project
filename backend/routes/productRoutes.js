@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalAuth } = require('../middleware/authMiddleware');
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -39,12 +39,15 @@ router.get('/', async (req, res) => {
 
 // @desc    Fetch single product
 // @route   GET /api/products/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (product) {
-            product.views += 1;
-            await product.save();
+            // Increment views ONLY if the viewer is not the owner
+            if (!req.user || req.user.username !== product.owner) {
+                product.views += 1;
+                await product.save();
+            }
             res.json(product);
         } else {
             res.status(404).json({ message: 'Product not found' });
@@ -54,17 +57,18 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// @desc    Create a product
 // @route   POST /api/products
 router.post('/', protect, async (req, res) => {
     try {
-        const { title, description, price, details, image } = req.body;
+        const { title, description, price, details, image, category, stock } = req.body;
         const product = new Product({
             title,
             description,
             price,
             details,
             image,
+            category: category || 'Other',
+            stock: Number(stock) || 1,
             owner: req.user.username // Associate with logged-in user
         });
 
@@ -92,6 +96,8 @@ router.put('/:id', protect, async (req, res) => {
             product.price = req.body.price || product.price;
             product.details = req.body.details || product.details;
             product.image = req.body.image || product.image;
+            product.category = req.body.category || product.category;
+            product.stock = req.body.stock !== undefined ? Number(req.body.stock) : product.stock;
 
             const updatedProduct = await product.save();
             res.json(updatedProduct);
@@ -129,6 +135,12 @@ router.put('/:id/cart', protect, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (product) {
+            if (product.stock <= 0) {
+                return res.status(400).json({ message: 'Product is out of stock' });
+            }
+            if (product.isPending) {
+                return res.status(400).json({ message: 'Product is currently being purchased and is pending verification' });
+            }
             if (product.inCart && product.cartOwner !== req.user.username) {
                 return res.status(400).json({ message: 'Product already in another person\'s cart' });
             }
@@ -152,12 +164,17 @@ router.post('/checkout', protect, async (req, res) => {
         const products = await Product.find({ _id: { $in: productIds } });
 
         for (let product of products) {
-            product.sold = true;
-            product.inCart = false;
-            product.cartOwner = null;
-            product.buyer = req.user.username;
-            product.purchaseDate = new Date().toLocaleDateString();
-            await product.save();
+            if (product.stock > 0) {
+                product.stock -= 1;
+                if (product.stock === 0) {
+                    product.sold = true;
+                }
+                product.inCart = false;
+                product.cartOwner = null;
+                product.buyer = req.user.username;
+                product.purchaseDate = new Date().toLocaleDateString();
+                await product.save();
+            }
         }
 
         res.json({ message: 'Checkout successful' });
