@@ -52,7 +52,7 @@ export default function ViewProducts({ user }) {
   });
 
   const isSearching = searchQuery !== "" || availabilityFilter !== "all" || sortOrder !== "" || categoryFilter !== "All";
-  const trendingProducts = filteredProducts.filter(p => p.top);
+  const trendingProducts = filteredProducts.filter(p => p.top).sort((a, b) => (b.views || 0) - (a.views || 0));
   const regularProducts = filteredProducts.filter(p => !p.top);
 
   if (loading) return <div style={{ color: "var(--text-primary)", textAlign: "center", marginTop: "100px", fontSize: "1.2rem" }}>Loading Marketplace...</div>;
