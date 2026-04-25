@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalAuth } = require('../middleware/authMiddleware');
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -39,12 +39,15 @@ router.get('/', async (req, res) => {
 
 // @desc    Fetch single product
 // @route   GET /api/products/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (product) {
-            product.views += 1;
-            await product.save();
+            // Increment views ONLY if the viewer is not the owner
+            if (!req.user || req.user.username !== product.owner) {
+                product.views += 1;
+                await product.save();
+            }
             res.json(product);
         } else {
             res.status(404).json({ message: 'Product not found' });
