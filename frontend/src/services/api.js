@@ -38,4 +38,11 @@ export const productAPI = {
     checkout: (productIds) => api.post('/products/checkout', { productIds }),
 };
 
+export const orderAPI = {
+    placeOrder: (orderData) => api.post('/orders', orderData),
+    getSellerOrders: () => api.get('/orders/seller'),
+    getBuyerOrders: () => api.get('/orders/buyer'),
+    verifyOrder: (id) => api.put(`/orders/${id}/verify`),
+};
+
 export default api;
