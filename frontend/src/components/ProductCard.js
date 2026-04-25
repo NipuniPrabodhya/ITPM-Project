@@ -66,7 +66,15 @@ export default function ProductCard({ product, user }) {
       {/* Product Image Header */}
       <div style={{ width: "100%", height: "180px", backgroundColor: "rgba(0,0,0,0.2)", display: "flex", justifyContent: "center", alignItems: "center", borderBottom: "1px solid var(--border-color)", overflow: "hidden" }}>
         {product.image ? (
-          <img src={product.image} alt={product.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img 
+            src={product.image} 
+            alt={product.title} 
+            style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "https://images.unsplash.com/photo-1560393464-5c69a73c5770?auto=format&fit=crop&q=80&w=400"; // Fallback placeholder
+            }}
+          />
         ) : (
           <span style={{ fontSize: "4rem" }}>🏷️</span>
         )}
