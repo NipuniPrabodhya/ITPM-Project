@@ -13,6 +13,8 @@ export default function ProductCard({ product, user }) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
 
   const handleBuy = async () => {
     if (!user) return showToast("Please login to buy items", "error");
@@ -65,20 +67,21 @@ export default function ProductCard({ product, user }) {
     }}>
       {/* Product Image Header */}
       <div style={{ width: "100%", height: "180px", backgroundColor: "rgba(0,0,0,0.2)", display: "flex", justifyContent: "center", alignItems: "center", borderBottom: "1px solid var(--border-color)", overflow: "hidden" }}>
-        {product.image ? (
+        {product.image && !imgError ? (
           <img 
             src={product.image} 
             alt={product.title} 
             style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = "https://images.unsplash.com/photo-1560393464-5c69a73c5770?auto=format&fit=crop&q=80&w=400"; // Fallback placeholder
-            }}
+            onError={() => setImgError(true)}
           />
         ) : (
-          <span style={{ fontSize: "4rem" }}>🏷️</span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", color: "rgba(255,255,255,0.4)" }}>
+            <span style={{ fontSize: "3.5rem", marginBottom: "8px", opacity: 0.8 }}>🏷️</span>
+            <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: "600" }}>No Image</span>
+          </div>
         )}
       </div>
+
 
       <div style={{ padding: "20px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
         <p style={{ margin: "0 0 5px 0", color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.5px" }}>{product.category}</p>
