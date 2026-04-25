@@ -59,6 +59,10 @@ const productSchema = mongoose.Schema({
     purchaseDate: {
         type: String,
         default: null
+    },
+    isPending: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
